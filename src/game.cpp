@@ -40,8 +40,8 @@ bool Game::initialize()
     }
     else
     {
-        mWindow = SDL_CreateWindow(config::window_title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        config::logical_window_width, config::logical_window_height, SDL_WINDOW_SHOWN);
+        mWindow = SDL_CreateWindow(config::window_title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
         if (mWindow == nullptr)
         {
@@ -65,10 +65,9 @@ bool Game::initialize()
     mRenderer = new Renderer;
     mRenderer->initialize(mWindow);
 
-    // The logical resolution of the game never changes; We just alter the scaling
+    // Fix logical resolution to 360x360; SDL scales to fill the 720x720 physical display
     SDL_RenderSetLogicalSize(mRenderer->mSDLRenderer, config::logical_window_width, config::logical_window_height);
-    SDL_SetWindowSize(mWindow, config::logical_window_width*config::resolution_scaling, config::logical_window_height*config::resolution_scaling);
-    SDL_SetWindowPosition(mWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_ShowCursor(SDL_DISABLE);
     
     mManager = new InputManager;
 
@@ -131,7 +130,7 @@ void Game::pushNewGame ()
     delete Game::getInstance()->mPlayState;
     Game::getInstance()->mPlayState = new GameState(Game::getInstance()->mManager);
     Game::getInstance()->mPlayState->initialize();
-    Game:getInstance()->pushState(Game::getInstance()->mPlayState);
+    Game::getInstance()->pushState(Game::getInstance()->mPlayState);
 }
 
 // Pushes the options to the front

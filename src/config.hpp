@@ -8,18 +8,13 @@ namespace config
     // Window title
     const char window_title[] = "Pixeltetris";
 
-    // Logical resolution of the game. Most constants are in respect to these two values,
-    // so do not change them unless you know what you're doing
-    const int logical_window_width = 640;
+    // Logical resolution: 360x360 scaled 2x to 720x720 physical (HyperPixel 4.0 Square)
+    const int logical_window_width = 360;
     const int logical_window_height = 360;
-    extern double resolution_scaling;                               // Default scaling of the logical resolution; 1 means 360p, 2 means 720p etc.
-    extern double available_resolution_scalings[];                  // Resolution scalings available in the options
-    const int starting_resolution_scaling_index = 4;                // The index of the starting resolution scaling in the available_resolution_scalings array
-    const int possible_resolution_scalings = 6;                     // Number of available resolution scalings
 
     // Board class
-    const int width_to_playfield = 242;                             // in pixels
-    const int height_to_playfield = 34;                             // in pixels
+    const int width_to_playfield = 100;                             // in pixels
+    const int height_to_playfield = 20;                             // in pixels
     const int block_size = 16;                                      // in pixels
     const int playfield_width = 10;                                 // in blocks
     const int true_playfield_height = 20;                           // in blocks
@@ -30,11 +25,11 @@ namespace config
     const int matrix_blocks = 5;                                    // matrix that holds tetromino info; in blocks
 
     // GameState class
-    const int next_box_x = 405;                                     // Horizontal distance from top left corner; in pixels
-    const int next_box_y = 10;                                      // Horizontal distance from top left corner; in pixels
+    const int next_box_x = 276;                                     // Horizontal distance from top left corner; in pixels
+    const int next_box_y = 20;                                      // Vertical distance from top left corner; in pixels
 
-    const int hold_box_x = 150;                                     // Horizontal distance from top left corner; in pixels
-    const int hold_box_y = 10;                                      // Vertical distance from top left corner; in pixels
+    const int hold_box_x = 8;                                      // Horizontal distance from top left corner; in pixels
+    const int hold_box_y = 20;                                      // Vertical distance from top left corner; in pixels
 
     // Constants relating to Tetris
     const int wait_time = 1000;                                     // Time in milliseconds

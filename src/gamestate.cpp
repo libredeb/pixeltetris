@@ -272,6 +272,7 @@ void GameState::checkState ()
     int lines = board->clearFullLines();
     if (lines > 0)
     {
+        SoundManager::getInstance()->playLineComplete();
         static const int POINTS[] = {0, 100, 300, 500, 800};
         score += POINTS[std::min(lines, 4)];
         if (score > highScore)

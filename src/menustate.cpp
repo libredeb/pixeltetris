@@ -80,6 +80,7 @@ void MenuState::update ()
                 if (index > 0)
                 {
                     --index;
+                    SoundManager::getInstance()->playMove();
                 }
                 break;
             }
@@ -89,6 +90,7 @@ void MenuState::update ()
                 if (index < mButtons.size()-1)
                 {
                     ++index;
+                    SoundManager::getInstance()->playMove();
                 }
                 break;
             }

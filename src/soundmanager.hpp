@@ -15,6 +15,7 @@ public:
     void playButtonPress();
     void playMove();
     void playRotate();
+    void playLineComplete();
 
 private:
     SoundManager();
@@ -24,6 +25,7 @@ private:
     Mix_Chunk*  mButtonPress;
     Mix_Chunk*  mMove;
     Mix_Chunk*  mRotate;
+    Mix_Chunk*  mLineComplete;
 };
 
 #endif // SOUNDMANAGER_HPP

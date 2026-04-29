@@ -1,6 +1,9 @@
 #include "gamestate.hpp"
 
-#include <iostream> // DEBUG
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "inputmanager.hpp"
 #include "game.hpp"
@@ -65,16 +68,33 @@ void GameState::initialize ()
         playfieldFrameClips[i].w = config::frame_sprite_size;
         playfieldFrameClips[i].h = config::frame_sprite_size;
     }
+
+    // Scoring
+    score = 0;
+    scoreChanged = true;
+    score_text      = new Texture();
+    high_score_text = new Texture();
+    score_label     = new Texture();
+    high_score_label= new Texture();
+    score_label->loadFromText("SCORE", Game::getInstance()->mRenderer->smallFont, config::default_text_color);
+    high_score_label->loadFromText("BEST", Game::getInstance()->mRenderer->smallFont, config::default_text_color);
+    loadHighScore();
+
     game_just_started = true;
 }
 
 void GameState::exit ()
 {
+    saveHighScore();
     delete board;
     delete countdown_texture;
     delete gameover_text;
     delete tetrominoSprites;
     delete playfieldFrame;
+    delete score_text;
+    delete high_score_text;
+    delete score_label;
+    delete high_score_label;
 }
 
 void GameState::run ()
@@ -143,8 +163,11 @@ void GameState::run ()
                     }
                 }
                 
+                unsigned long long effective_wait = mInputManager->isDownHeld()
+                    ? config::soft_drop_time : config::wait_time;
+
                 time_snap2 = SDL_GetTicks();
-                if (time_snap2 - time_snap1 >= config::wait_time)
+                if (time_snap2 - time_snap1 >= effective_wait)
                 {
                     movePieceDown();
                     time_snap1 = SDL_GetTicks();
@@ -200,6 +223,7 @@ void GameState::draw ()
     if (!board->isGameOver() && config::ghost_piece_enabled) drawGhostPiece(currentPiece);
     if (!hold_block_first_time) drawHoldPiece(holdPiece);
     drawNextPiece(nextPiece);
+    drawScore();
 }
 
 /*
@@ -244,7 +268,17 @@ void GameState::createNewPiece ()
 void GameState::checkState ()
 {
     board->storePiece(currentPiece);
-    board->clearFullLines();
+    int lines = board->clearFullLines();
+    if (lines > 0)
+    {
+        static const int POINTS[] = {0, 100, 300, 500, 800};
+        score += POINTS[std::min(lines, 4)];
+        if (score > highScore)
+        {
+            highScore = score;
+        }
+        scoreChanged = true;
+    }
     if (!board->isGameOver())
     {
         createNewPiece();
@@ -475,7 +509,59 @@ void GameState::drawGhostPiece (Piece p)
     tetrominoSprites->setAlphaMode(255); // Don't forget to change it back to normal!
 }
 
+void GameState::drawScore ()
+{
+    if (scoreChanged)
+    {
+        score_text->loadFromText(
+            std::to_string(score),
+            Game::getInstance()->mRenderer->smallFont,
+            config::default_text_color);
+        high_score_text->loadFromText(
+            std::to_string(highScore),
+            Game::getInstance()->mRenderer->smallFont,
+            config::default_text_color);
+        scoreChanged = false;
+    }
+    const int x = config::next_box_x;
+    score_label->render(x, config::next_box_y + 90);
+    score_text->render(x, config::next_box_y + 106);
+    high_score_label->render(x, config::next_box_y + 130);
+    high_score_text->render(x, config::next_box_y + 146);
+}
+
 int GameState::getRandom (int lower_limit, int upper_limit)
 {
     return rand() % (upper_limit - lower_limit + 1) + lower_limit;
+}
+
+std::string GameState::getHighScorePath ()
+{
+    char *prefPath = SDL_GetPrefPath("", "pixeltetris");
+    if (prefPath == nullptr)
+    {
+        return "highscore.txt";
+    }
+    std::string path = std::string(prefPath) + "highscore.txt";
+    SDL_free(prefPath);
+    return path;
+}
+
+void GameState::loadHighScore ()
+{
+    highScore = 0;
+    std::ifstream file(getHighScorePath());
+    if (file.is_open())
+    {
+        file >> highScore;
+    }
+}
+
+void GameState::saveHighScore ()
+{
+    std::ofstream file(getHighScorePath());
+    if (file.is_open())
+    {
+        file << highScore;
+    }
 }

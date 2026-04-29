@@ -18,7 +18,7 @@ public:
     bool isBlockFree (int r, int c);    
     bool isPositionLegal (Piece p);     
     void storePiece (Piece p);          
-    void clearFullLines ();             
+    int clearFullLines ();              
     bool isGameOver ();                 
 
 private:

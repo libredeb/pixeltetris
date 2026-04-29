@@ -32,7 +32,8 @@ namespace config
     const int hold_box_y = 20;                                      // Vertical distance from top left corner; in pixels
 
     // Constants relating to Tetris
-    const int wait_time = 1000;                                     // Time in milliseconds
+    const int wait_time = 1000;                                     // Gravity interval in milliseconds
+    const int soft_drop_time = 50;                                  // Gravity interval during soft drop in milliseconds
     extern bool ghost_piece_enabled;                                // Enables or disables the ghost piece to reduce misdrops
 
     // Visuals

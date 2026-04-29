@@ -1,6 +1,8 @@
 #ifndef GAMESTATE_HPP
 #define GAMESTATE_HPP
 
+#include <string>
+
 #include "board.hpp"
 #include "inputmanager.hpp"
 #include "piece.hpp"
@@ -44,6 +46,14 @@ private:
     Texture *playfieldFrame;
     SDL_Rect playfieldFrameClips[4];
 
+    int score;
+    int highScore;
+    bool scoreChanged;
+    Texture *score_text;
+    Texture *high_score_text;
+    Texture *score_label;
+    Texture *high_score_label;
+
     bool isGameOver ();                                 // True if the game has ended
     void createNewPiece();
     void checkState ();                                 // Deletes filled lines and creates a new block.
@@ -55,7 +65,12 @@ private:
     void drawNextPiece (Piece p);
     void drawHoldPiece (Piece p);
     void drawGhostPiece (Piece p);
+    void drawScore ();
     int getRandom (int lower_limit, int upper_limit);   // Return a random number in this range
+
+    void loadHighScore ();
+    void saveHighScore ();
+    std::string getHighScorePath ();
 };
 
 #endif // GAMESTATE_HPP

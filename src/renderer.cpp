@@ -16,13 +16,15 @@
 void Renderer::initialize (SDL_Window *window)
 {
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+    smallFont  = TTF_OpenFont("../../assets/munro-small.ttf", 16);
     mediumFont = TTF_OpenFont("../../assets/munro-small.ttf", 30);
-    bigFont = TTF_OpenFont("../../assets/munro.ttf", 50);
+    bigFont    = TTF_OpenFont("../../assets/munro.ttf", 50);
     #else
+    smallFont  = TTF_OpenFont("../assets/munro-small.ttf", 16);
     mediumFont = TTF_OpenFont("../assets/munro-small.ttf", 30);
-    bigFont = TTF_OpenFont("../assets/munro.ttf", 50);
+    bigFont    = TTF_OpenFont("../assets/munro.ttf", 50);
     #endif
-    if (mediumFont == nullptr || bigFont == nullptr)
+    if (smallFont == nullptr || mediumFont == nullptr || bigFont == nullptr)
     {
         std::cerr << "Could not load font! SDL_ttf error: " << TTF_GetError() << '\n';
     }

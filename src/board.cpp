@@ -76,9 +76,10 @@ void Board::storePiece (Piece p)
     pieces.push_back(p);
 }
 
-// Clears filled lines
-void Board::clearFullLines()
+// Clears filled lines and returns the number of lines cleared
+int Board::clearFullLines()
 {
+    int cleared = 0;
     for (int row = 0; row < config::playfield_height; row++)
     {
         bool line_filled = true;
@@ -87,13 +88,16 @@ void Board::clearFullLines()
             if (isBlockFree(row, col))
             {
                 line_filled = false;
-            } 
+                break;
+            }
         }
         if (line_filled)
         {
             deleteLine(row);
+            cleared++;
         }
     }
+    return cleared;
 }
 
 // True if the game has ended; Note: the row index starts from the top

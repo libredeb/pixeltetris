@@ -10,8 +10,9 @@
 
 InputManager::InputManager ()
 {
-    quit_game = false;
-    action = Action::stay_idle;
+    quit_game  = false;
+    action     = Action::stay_idle;
+    mDownHeld  = false;
     mPrevAxisX = 0;
     mPrevAxisY = 0;
     mController = nullptr;
@@ -58,6 +59,11 @@ bool InputManager::isGameExiting ()
     return quit_game;
 }
 
+bool InputManager::isDownHeld () const
+{
+    return mDownHeld;
+}
+
 // Polls from keyboard/gamepad and returns the corresponding action; Returns false if all events have been polled
 bool InputManager::pollAction ()
 {
@@ -81,6 +87,7 @@ bool InputManager::pollAction ()
                 case SDLK_DOWN:
                 {
                     action = Action::move_down;
+                    mDownHeld = true;
                     break;
                 }
 
@@ -139,6 +146,14 @@ bool InputManager::pollAction ()
                 }
             }
         }
+        else if (event.type == SDL_KEYUP)
+        {
+            if (event.key.keysym.sym == SDLK_DOWN)
+            {
+                mDownHeld = false;
+            }
+            action = Action::stay_idle;
+        }
         else if (event.type == SDL_CONTROLLERBUTTONDOWN)
         {
             switch (event.cbutton.button)
@@ -152,6 +167,7 @@ bool InputManager::pollAction ()
                 case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                 {
                     action = Action::move_down;
+                    mDownHeld = true;
                     break;
                 }
 
@@ -171,6 +187,7 @@ bool InputManager::pollAction ()
                 case SDL_CONTROLLER_BUTTON_A:
                 {
                     action = Action::move_down;
+                    mDownHeld = true;
                     break;
                 }
 
@@ -196,6 +213,15 @@ bool InputManager::pollAction ()
                 }
             }
         }
+        else if (event.type == SDL_CONTROLLERBUTTONUP)
+        {
+            if (event.cbutton.button == SDL_CONTROLLER_BUTTON_A ||
+                event.cbutton.button == SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+            {
+                mDownHeld = false;
+            }
+            action = Action::stay_idle;
+        }
         // D-pad enviado como hat (8BitDo en modo DirectInput u otros)
         else if (event.type == SDL_JOYHATMOTION)
         {
@@ -203,11 +229,33 @@ bool InputManager::pollAction ()
                 event.jhat.which == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(mController)))
             {
                 Uint8 hat = event.jhat.value;
-                if      (hat & SDL_HAT_UP)    action = Action::move_up;
-                else if (hat & SDL_HAT_DOWN)  action = Action::move_down;
-                else if (hat & SDL_HAT_LEFT)  action = Action::move_left;
-                else if (hat & SDL_HAT_RIGHT) action = Action::move_right;
-                else                          action = Action::stay_idle; // SDL_HAT_CENTERED
+                if (hat == SDL_HAT_CENTERED)
+                {
+                    mDownHeld = false;
+                    action = Action::stay_idle;
+                }
+                else if (hat & SDL_HAT_UP)
+                {
+                    mDownHeld = false;
+                    action = Action::move_up;
+                }
+                else if (hat & SDL_HAT_DOWN)
+                {
+                    mDownHeld = true;
+                    action = Action::move_down;
+                }
+                else if (hat & SDL_HAT_LEFT)
+                {
+                    action = Action::move_left;
+                }
+                else if (hat & SDL_HAT_RIGHT)
+                {
+                    action = Action::move_right;
+                }
+                else
+                {
+                    action = Action::stay_idle;
+                }
             }
             else
             {
@@ -229,9 +277,21 @@ bool InputManager::pollAction ()
             }
             else if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
             {
-                if      (mPrevAxisY > -DEAD_ZONE && val <= -DEAD_ZONE) action = Action::move_up;
-                else if (mPrevAxisY < DEAD_ZONE  && val >= DEAD_ZONE)  action = Action::move_down;
-                else                                                    action = Action::stay_idle;
+                if (mPrevAxisY > -DEAD_ZONE && val <= -DEAD_ZONE)
+                {
+                    mDownHeld = false;
+                    action = Action::move_up;
+                }
+                else if (mPrevAxisY < DEAD_ZONE && val >= DEAD_ZONE)
+                {
+                    mDownHeld = true;
+                    action = Action::move_down;
+                }
+                else
+                {
+                    if (val > -DEAD_ZONE && val < DEAD_ZONE) mDownHeld = false;
+                    action = Action::stay_idle;
+                }
                 mPrevAxisY = val;
             }
             else
@@ -261,6 +321,7 @@ bool InputManager::pollAction ()
                     std::cout << "Gamepad disconnected.\n";
                     SDL_GameControllerClose(mController);
                     mController = nullptr;
+                    mDownHeld = false;
                     for (int i = 0; i < SDL_NumJoysticks(); i++)
                     {
                         if (SDL_IsGameController(i))

@@ -59,6 +59,7 @@ void PausedState::update ()
         }
         switch (mInputManager->getAction())
         {
+            case Action::rotate:
             case Action::select:
             {
                 mButtons[index]->callbackFunction();

@@ -77,6 +77,7 @@ void OptionsState::update ()
                 Game::getInstance()->popState();
                 break;
             }
+            case Action::rotate:
             case Action::select:
             {
                 if (index == 1)

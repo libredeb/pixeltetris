@@ -9,11 +9,12 @@ enum class Action
     stay_idle, back, move_up, move_down, move_left, move_right, select, drop, rotate, hold, pause
 };
 
-// Manages all input polled from the keyboard
+// Manages all input polled from keyboard and gamepad
 class InputManager
 {
 public:
     InputManager ();
+    ~InputManager ();
     void clearEventQueue ();
     Action getAction ();
     bool isGameExiting ();
@@ -22,6 +23,7 @@ public:
 private:
     bool quit_game;
     Action action;
+    SDL_GameController *mController;
 };
 
 #endif // INPUTMANAGER_HPP

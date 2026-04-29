@@ -12,6 +12,7 @@
 #include "menustate.hpp"
 #include "optionsstate.hpp"
 #include "pausedstate.hpp"
+#include "soundmanager.hpp"
 #include "state.hpp"
 
 /*
@@ -33,7 +34,7 @@ Game *Game::getInstance()
 bool Game::initialize()
 {
     bool success = true;
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO) < 0)
     {
         std::cerr << "Could not initialize SDL! SDL_Error: " << SDL_GetError() << '\n';
         success = false;
@@ -71,6 +72,9 @@ bool Game::initialize()
     
     mManager = new InputManager;
 
+    SoundManager::getInstance()->initialize();
+    SoundManager::getInstance()->playMusic();
+
     // Now load the main menu screen
     mMainMenuState = new MenuState(mManager);
     mMainMenuState->initialize();
@@ -90,6 +94,8 @@ void Game::exit ()
 
     SDL_DestroyWindow(mWindow);
     mWindow = nullptr;
+
+    SoundManager::getInstance()->exit();
 
     TTF_Quit();
     IMG_Quit();

@@ -33,7 +33,7 @@ namespace config
 
     // Constants relating to Tetris
     const int wait_time = 1000;                                     // Gravity interval in milliseconds
-    const int soft_drop_time = 50;                                  // Gravity interval during soft drop in milliseconds
+    const int soft_drop_time = 80;                                  // Gravity interval during soft drop in milliseconds
     extern bool ghost_piece_enabled;                                // Enables or disables the ghost piece to reduce misdrops
 
     // Visuals

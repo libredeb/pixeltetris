@@ -21,10 +21,12 @@ public:
     bool pollAction ();
     void setExit ();
     bool isDownHeld () const;
+    bool isKeyRepeat () const;
 private:
     bool quit_game;
     Action action;
     bool mDownHeld;
+    bool mIsKeyRepeat;
     SDL_GameController *mController;
     Sint16 mPrevAxisX;
     Sint16 mPrevAxisY;

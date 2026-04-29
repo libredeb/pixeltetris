@@ -10,11 +10,12 @@
 
 InputManager::InputManager ()
 {
-    quit_game  = false;
-    action     = Action::stay_idle;
-    mDownHeld  = false;
-    mPrevAxisX = 0;
-    mPrevAxisY = 0;
+    quit_game    = false;
+    action       = Action::stay_idle;
+    mDownHeld    = false;
+    mIsKeyRepeat = false;
+    mPrevAxisX   = 0;
+    mPrevAxisY   = 0;
     mController = nullptr;
     for (int i = 0; i < SDL_NumJoysticks(); i++)
     {
@@ -64,6 +65,11 @@ bool InputManager::isDownHeld () const
     return mDownHeld;
 }
 
+bool InputManager::isKeyRepeat () const
+{
+    return mIsKeyRepeat;
+}
+
 // Polls from keyboard/gamepad and returns the corresponding action; Returns false if all events have been polled
 bool InputManager::pollAction ()
 {
@@ -76,6 +82,7 @@ bool InputManager::pollAction ()
         }
         else if (event.type == SDL_KEYDOWN)
         {
+            mIsKeyRepeat = (event.key.repeat > 0);
             switch (event.key.keysym.sym)
             {
                 case SDLK_UP:
@@ -148,6 +155,7 @@ bool InputManager::pollAction ()
         }
         else if (event.type == SDL_KEYUP)
         {
+            mIsKeyRepeat = false;
             if (event.key.keysym.sym == SDLK_DOWN)
             {
                 mDownHeld = false;

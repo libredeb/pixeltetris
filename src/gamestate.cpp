@@ -8,6 +8,7 @@
 #include "inputmanager.hpp"
 #include "game.hpp"
 #include "renderer.hpp"
+#include "soundmanager.hpp"
 #include "texture.hpp"
 #include "utilities.hpp"
 
@@ -292,17 +293,27 @@ void GameState::handleEvent (Action action)
     {
         case Action::move_down:
         {
+            if (!mInputManager->isKeyRepeat())
+            {
+                SoundManager::getInstance()->playMove();
+            }
             currentPiece.r++;
             if (!board->isPositionLegal(currentPiece))
             {
                 currentPiece.r--;
                 checkState();
             }
+            // Reset gravity timer so it doesn't immediately double-drop after a manual move
+            time_snap1 = SDL_GetTicks();
             break;
         }
 
         case Action::move_left:
         {
+            if (!mInputManager->isKeyRepeat())
+            {
+                SoundManager::getInstance()->playMove();
+            }
             currentPiece.c--;
             if (!board->isPositionLegal(currentPiece))
             {
@@ -313,6 +324,10 @@ void GameState::handleEvent (Action action)
 
         case Action::move_right:
         {
+            if (!mInputManager->isKeyRepeat())
+            {
+                SoundManager::getInstance()->playMove();
+            }
             currentPiece.c++;
             if (!board->isPositionLegal(currentPiece))
             {
@@ -335,6 +350,7 @@ void GameState::handleEvent (Action action)
         case Action::move_up:
         case Action::rotate:
         {
+            SoundManager::getInstance()->playRotate();
             currentPiece.rotation = (currentPiece.rotation + 1) % 4;
             if (!board->isPositionLegal(currentPiece))
             {

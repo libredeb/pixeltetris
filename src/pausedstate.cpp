@@ -4,6 +4,7 @@
 
 #include "config.hpp"
 #include "game.hpp"
+#include "soundmanager.hpp"
 
 /*
  * ====================================
@@ -62,6 +63,7 @@ void PausedState::update ()
             case Action::rotate:
             case Action::select:
             {
+                SoundManager::getInstance()->playButtonPress();
                 mButtons[index]->callbackFunction();
                 break;
             }

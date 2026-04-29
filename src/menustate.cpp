@@ -8,6 +8,7 @@
 #include "config.hpp"
 #include "inputmanager.hpp"
 #include "renderer.hpp"
+#include "soundmanager.hpp"
 #include "state.hpp"
 
 /*
@@ -69,6 +70,7 @@ void MenuState::update ()
             case Action::rotate:
             case Action::select:
             {
+                SoundManager::getInstance()->playButtonPress();
                 mButtons[index]->callbackFunction();
                 break;
             }

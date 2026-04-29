@@ -2,6 +2,7 @@
 
 #include "config.hpp"
 #include "game.hpp"
+#include "soundmanager.hpp"
 
 /*
  * ====================================
@@ -82,6 +83,7 @@ void OptionsState::update ()
             {
                 if (index == 1)
                 {
+                    SoundManager::getInstance()->playButtonPress();
                     Game::getInstance()->popState();
                 }
                 break;

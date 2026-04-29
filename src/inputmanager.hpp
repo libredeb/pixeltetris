@@ -24,6 +24,8 @@ private:
     bool quit_game;
     Action action;
     SDL_GameController *mController;
+    Sint16 mPrevAxisX;
+    Sint16 mPrevAxisY;
 };
 
 #endif // INPUTMANAGER_HPP

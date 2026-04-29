@@ -12,6 +12,8 @@ InputManager::InputManager ()
 {
     quit_game = false;
     action = Action::stay_idle;
+    mPrevAxisX = 0;
+    mPrevAxisY = 0;
     mController = nullptr;
     for (int i = 0; i < SDL_NumJoysticks(); i++)
     {
@@ -165,31 +167,25 @@ bool InputManager::pollAction ()
                     break;
                 }
 
-                // A = rotate in game / confirm in menus (handled via Action::rotate fallthrough)
+                // SDL_A = botón físico B (abajo) en layout Nintendo/Switch
                 case SDL_CONTROLLER_BUTTON_A:
-                {
-                    action = Action::rotate;
-                    break;
-                }
-
-                // B = soft drop (same as d-pad down)
-                case SDL_CONTROLLER_BUTTON_B:
                 {
                     action = Action::move_down;
                     break;
                 }
 
-                // START = pause during gameplay
-                case SDL_CONTROLLER_BUTTON_START:
+                // SDL_B = botón físico A (derecha) en layout Nintendo/Switch
+                // → rota en juego, confirma en menús (via fallthrough en menu states)
+                case SDL_CONTROLLER_BUTTON_B:
                 {
-                    action = Action::pause;
+                    action = Action::rotate;
                     break;
                 }
 
-                // BACK/SELECT = go back / exit
-                case SDL_CONTROLLER_BUTTON_BACK:
+                // START = pausa durante el juego
+                case SDL_CONTROLLER_BUTTON_START:
                 {
-                    action = Action::back;
+                    action = Action::pause;
                     break;
                 }
 
@@ -198,6 +194,49 @@ bool InputManager::pollAction ()
                     action = Action::stay_idle;
                     break;
                 }
+            }
+        }
+        // D-pad enviado como hat (8BitDo en modo DirectInput u otros)
+        else if (event.type == SDL_JOYHATMOTION)
+        {
+            if (mController != nullptr && event.jhat.hat == 0 &&
+                event.jhat.which == SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(mController)))
+            {
+                Uint8 hat = event.jhat.value;
+                if      (hat & SDL_HAT_UP)    action = Action::move_up;
+                else if (hat & SDL_HAT_DOWN)  action = Action::move_down;
+                else if (hat & SDL_HAT_LEFT)  action = Action::move_left;
+                else if (hat & SDL_HAT_RIGHT) action = Action::move_right;
+                else                          action = Action::stay_idle; // SDL_HAT_CENTERED
+            }
+            else
+            {
+                action = Action::stay_idle;
+            }
+        }
+        // D-pad o stick analógico enviado como eje (fallback)
+        // Solo dispara al cruzar el umbral (una acción por movimiento)
+        else if (event.type == SDL_CONTROLLERAXISMOTION)
+        {
+            const Sint16 DEAD_ZONE = 10000;
+            Sint16 val = event.caxis.value;
+            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX)
+            {
+                if      (mPrevAxisX > -DEAD_ZONE && val <= -DEAD_ZONE) action = Action::move_left;
+                else if (mPrevAxisX < DEAD_ZONE  && val >= DEAD_ZONE)  action = Action::move_right;
+                else                                                    action = Action::stay_idle;
+                mPrevAxisX = val;
+            }
+            else if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
+            {
+                if      (mPrevAxisY > -DEAD_ZONE && val <= -DEAD_ZONE) action = Action::move_up;
+                else if (mPrevAxisY < DEAD_ZONE  && val >= DEAD_ZONE)  action = Action::move_down;
+                else                                                    action = Action::stay_idle;
+                mPrevAxisY = val;
+            }
+            else
+            {
+                action = Action::stay_idle;
             }
         }
         else if (event.type == SDL_CONTROLLERDEVICEADDED)
@@ -222,7 +261,6 @@ bool InputManager::pollAction ()
                     std::cout << "Gamepad disconnected.\n";
                     SDL_GameControllerClose(mController);
                     mController = nullptr;
-                    // Try to reopen another available controller
                     for (int i = 0; i < SDL_NumJoysticks(); i++)
                     {
                         if (SDL_IsGameController(i))

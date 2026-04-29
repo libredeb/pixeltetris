@@ -185,4 +185,8 @@ bool Game::isGameExiting ()
 
 Game *Game::mInstance = 0;
 
-Game::Game () {}
+Game::Game ()
+    : mWindow(nullptr), mManager(nullptr), mRenderer(nullptr),
+      mPlayState(nullptr), mMainMenuState(nullptr),
+      mOptionsState(nullptr), mPausedState(nullptr)
+{}

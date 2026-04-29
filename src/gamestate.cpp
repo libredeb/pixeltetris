@@ -278,6 +278,7 @@ void GameState::checkState ()
         if (score > highScore)
         {
             highScore = score;
+            saveHighScore();
         }
         scoreChanged = true;
     }

@@ -6,6 +6,8 @@
 State::State (InputManager *manager)
 {
     mInputManager = manager;
+    mRenderer = nullptr;
+    nextStateID = STATE_NULL;
 }
 
 void State::popState (Game *game)

@@ -4,7 +4,6 @@
 
 #include "SDL2/SDL_ttf.h"
 #include "SDL2/SDL_image.h"
-#include "SDL_image.h"
 
 #include "config.hpp"
 #include "game.hpp"
@@ -34,7 +33,6 @@ void Texture::free()
     }
 }
 
-// Creates texture from an image path
 bool Texture::loadFromImage (std::string path) 
 {
     bool success = true;
@@ -47,7 +45,6 @@ bool Texture::loadFromImage (std::string path)
     }
     else
     {
-        // SDL_SetColorKey(tempSurf, SDL_TRUE, SDL_MapRGB(tempSurf->format, 0xFE, 0xFE, 0xFE)); 
         mTexture = SDL_CreateTextureFromSurface(Game::getInstance()->mRenderer->mSDLRenderer, tempSurf);
         width = tempSurf->w;
         height = tempSurf->h;
@@ -56,11 +53,15 @@ bool Texture::loadFromImage (std::string path)
     return success;
 }
 
-// Creates texture from string with a certain color
 bool Texture::loadFromText (std::string text, TTF_Font *font, SDL_Color text_color)
 {
     bool success = true;
     free();
+    if (font == nullptr)
+    {
+        std::cerr << "Could not create surface from text: font is null\n";
+        return false;
+    }
     SDL_Surface *text_surface = TTF_RenderText_Blended_Wrapped(font, text.c_str(), text_color, config::logical_window_width);
     if (text_surface == nullptr)
     {
@@ -80,34 +81,50 @@ bool Texture::loadFromText (std::string text, TTF_Font *font, SDL_Color text_col
             width = text_surface->w;
             height = text_surface->h;
         }
+        SDL_FreeSurface(text_surface);
     }
-    SDL_FreeSurface(text_surface);
     return success;
 }
 
-// Renders texture with top left corner at x, y
-void Texture::render (int x, int y, SDL_Rect *clip)
+void Texture::render (int x, int y, SDL_Rect *clip, int dest_w, int dest_h)
 {
+    if (mTexture == nullptr)
+    {
+        return;
+    }
     SDL_Rect r = {x, y, width, height};
     if (clip != nullptr)
     {
         r.w = clip->w;
         r.h = clip->h;
     }
+    if (dest_w > 0)
+    {
+        r.w = dest_w;
+    }
+    if (dest_h > 0)
+    {
+        r.h = dest_h;
+    }
     SDL_RenderCopy(Game::getInstance()->mRenderer->mSDLRenderer, mTexture, clip, &r);
 }
 
-// Renders texture centered at x, y
 void Texture::renderCentered (int x, int y)
 {
+    if (mTexture == nullptr)
+    {
+        return;
+    }
     SDL_Rect r = {x-(width/2), y-(height/2), width, height};
     SDL_RenderCopy(Game::getInstance()->mRenderer->mSDLRenderer, mTexture, nullptr, &r);
 }
 
-// Sets transparency
 void Texture::setAlphaMode (Uint8 alpha)
 {
-    SDL_SetTextureAlphaMod (mTexture, alpha);
+    if (mTexture != nullptr)
+    {
+        SDL_SetTextureAlphaMod (mTexture, alpha);
+    }
 }
 
 int Texture::getWidth()

@@ -1,22 +1,16 @@
 #include "menustate.hpp"
 
-#include <iostream> //debug
-#include <vector>
-
-#include <SDL2/SDL.h>
-
 #include "config.hpp"
 #include "inputmanager.hpp"
 #include "renderer.hpp"
 #include "state.hpp"
 
-/*
- * ====================================
- * Public methods start here
- * ====================================
- */
-
-MenuState::MenuState (InputManager *manager) : State (manager) {}
+MenuState::MenuState (InputManager *manager) : State (manager)
+{
+    title_text = nullptr;
+    hint_text = nullptr;
+    index = 0;
+}
 
 MenuState::~MenuState ()
 {
@@ -27,18 +21,22 @@ void MenuState::initialize ()
 {
     index = 0;
     title_text = new Texture();
-    title_text->loadFromText ("Pixeltetris!", Game::getInstance()->mRenderer->bigFont, config::default_text_color);
+    title_text->loadFromText("Pixeltetris", Game::getInstance()->mRenderer->bigFont, config::default_text_color);
+    hint_text = new Texture();
+    TTF_Font *hint_font = Game::getInstance()->mRenderer->smallFont;
+    if (hint_font == nullptr)
+    {
+        hint_font = Game::getInstance()->mRenderer->mediumFont;
+    }
+    hint_text->loadFromText("A Select   B Back   START Pause", hint_font, config::default_text_color);
 
-    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-    mButtons.push_back(new Button ("../../assets/button-play.png", &Game::pushNewGame, (config::logical_window_width-80)/2, 130));
-    mButtons.push_back(new Button ("../../assets/button-options.png", &Game::pushOptions, (config::logical_window_width-80)/2, 180));
-    mButtons.push_back(new Button ("../../assets/button-exit.png", &Game::goBack, (config::logical_window_width-80)/2, 230));
-
-    #else
-    mButtons.push_back(new Button ("../assets/button-play.png", &Game::pushNewGame, (config::logical_window_width-80)/2, 130));
-    mButtons.push_back(new Button ("../assets/button-options.png", &Game::pushOptions, (config::logical_window_width-80)/2, 180));
-    mButtons.push_back(new Button ("../assets/button-exit.png", &Game::goBack, (config::logical_window_width-80)/2, 230));
-    #endif
+    const int x = config::menu_button_x;
+    const int w = config::menu_button_w;
+    const int h = config::menu_button_h;
+    const int start_y = 200;
+    mButtons.push_back(new Button("PLAY", &Game::pushNewGame, x, start_y, w, h));
+    mButtons.push_back(new Button("OPTIONS", &Game::pushOptions, x, start_y + h + config::menu_button_gap, w, h));
+    mButtons.push_back(new Button("EXIT", &Game::goBack, x, start_y + 2 * (h + config::menu_button_gap), w, h));
 }
 
 void MenuState::exit ()
@@ -47,12 +45,18 @@ void MenuState::exit ()
     {
         delete i;
     }
+    mButtons.clear();
+    delete title_text;
+    title_text = nullptr;
+    delete hint_text;
+    hint_text = nullptr;
 }
 
 void MenuState::run ()
 {
+    mInputManager->setRepeatPolicy(RepeatPolicy::menu);
     update();
-    draw();          
+    draw();
 }
 
 void MenuState::update ()
@@ -67,8 +71,15 @@ void MenuState::update ()
         switch (mInputManager->getAction())
         {
             case Action::select:
+            case Action::pause:
             {
                 mButtons[index]->callbackFunction();
+                break;
+            }
+
+            case Action::back:
+            {
+                nextStateID = STATE_EXIT;
                 break;
             }
 
@@ -83,12 +94,15 @@ void MenuState::update ()
 
             case Action::move_down:
             {
-                if (index < mButtons.size()-1)
+                if (index < static_cast<int>(mButtons.size()) - 1)
                 {
                     ++index;
                 }
                 break;
             }
+
+            default:
+                break;
         }
     }
 }
@@ -96,16 +110,18 @@ void MenuState::update ()
 void MenuState::draw ()
 {
     Game::getInstance()->mRenderer->clearScreen();
-    for (auto i : mButtons)
+    if (title_text != nullptr)
     {
-        i->draw();
+        title_text->renderCentered(config::logical_window_width / 2, 90);
     }
-    title_text->renderCentered(config::logical_window_width/2, 50);
-    SDL_Rect highlight_box = {mButtons[index]->getX(), mButtons[index]->getY(), mButtons[index]->getWidth(), mButtons[index]->getHeight()};
-    SDL_SetRenderDrawBlendMode (Game::getInstance()->mRenderer->mSDLRenderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor (Game::getInstance()->mRenderer->mSDLRenderer, 255, 255, 255, config::transparency_alpha-20);
-    SDL_RenderFillRect(Game::getInstance()->mRenderer->mSDLRenderer, &highlight_box);
-    SDL_SetRenderDrawBlendMode (Game::getInstance()->mRenderer->mSDLRenderer, SDL_BLENDMODE_NONE);
+    for (size_t i = 0; i < mButtons.size(); i++)
+    {
+        mButtons[i]->draw(static_cast<int>(i) == index);
+    }
+    if (hint_text != nullptr)
+    {
+        hint_text->renderCentered(config::logical_window_width / 2, config::logical_window_height - 48);
+    }
     Game::getInstance()->mRenderer->updateScreen();
 }
 

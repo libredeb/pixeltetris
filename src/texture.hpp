@@ -18,7 +18,7 @@ public:
 
     bool loadFromImage (std::string path);
     bool loadFromText (std::string text, TTF_Font *font, SDL_Color text_color);
-    void render (int x, int y, SDL_Rect *clip = nullptr);
+    void render (int x, int y, SDL_Rect *clip = nullptr, int dest_w = 0, int dest_h = 0);
     void renderCentered (int x, int y);
     void setAlphaMode (Uint8 alpha);
 

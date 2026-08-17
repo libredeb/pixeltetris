@@ -16,11 +16,10 @@ class MenuState;
 class OptionsState;
 class PausedState;
 
-// Utilizes the "Singleton pattern" to ensure there can only be one game
 class Game
 {
 public:
-    friend class OptionsState;          // Options can change the window size            
+    friend class OptionsState;
     static Game* getInstance();
 
     bool initialize ();
@@ -38,8 +37,9 @@ public:
     static void goDoubleBack();
 
     bool isGameExiting();
+    void setWindowed (bool windowed, bool forced = true);
 
-    Renderer *mRenderer;                // The renderer used for all things rendering
+    Renderer *mRenderer;
     
 private:
     static Game *mInstance;
@@ -52,6 +52,12 @@ private:
     MenuState *mMainMenuState;
     OptionsState *mOptionsState;
     PausedState *mPausedState;
+
+    bool mWindowed;
+    bool mWindowedForced;
+    Uint32 mFrameStart;
+
+    bool detectHandheldDisplay ();
 };
 
 #endif // GAME_HPP

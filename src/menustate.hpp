@@ -8,7 +8,6 @@
 #include "renderer.hpp"
 #include "state.hpp"
 
-// The main menu of the game; It is the state shown when the game starts
 class MenuState: public State
 {
 public:
@@ -26,7 +25,8 @@ public:
 private:
     std::vector<Button*> mButtons;
     Texture *title_text;
-    int index;                          // Shows the current button selected
+    Texture *hint_text;
+    int index;
 };
 
 #endif // MENUSTATE_HPP

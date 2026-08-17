@@ -1,33 +1,56 @@
 #include "button.hpp"
 
-#include <string>
+#include "config.hpp"
+#include "game.hpp"
+#include "renderer.hpp"
 
-/*
- * ====================================
- * Public methods start here
- * ====================================
- */
-
-Button::Button (std::string path, void (*callback) (), int posX, int posY)
+Button::Button (const std::string &label, void (*callback) (), int posX, int posY, int w, int h)
 {
     callbackFunction = callback;
     position_x = posX;
     position_y = posY;
-    texture = new Texture;
-    texture->loadFromImage(path);
-    width = texture->getWidth();
-    height = texture->getHeight();
+    width = w;
+    height = h;
+    label_texture = new Texture;
+    TTF_Font *font = Game::getInstance()->mRenderer->mediumFont;
+    label_texture->loadFromText(label, font, config::default_text_color);
 }
 
 Button::~Button ()
 {
-    texture->free();
+    delete label_texture;
+    label_texture = nullptr;
 }
 
-// Draws the button on the screen
-void Button::draw ()
+void Button::draw (bool highlighted)
 {
-    texture->render(position_x, position_y);
+    SDL_Renderer *renderer = Game::getInstance()->mRenderer->mSDLRenderer;
+    SDL_Rect rect = {position_x, position_y, width, height};
+
+    if (highlighted)
+    {
+        SDL_SetRenderDrawColor(renderer, config::button_fill_selected_r,
+            config::button_fill_selected_g, config::button_fill_selected_b, 0xFF);
+    }
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, config::button_fill_r,
+            config::button_fill_g, config::button_fill_b, 0xFF);
+    }
+    SDL_RenderFillRect(renderer, &rect);
+
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
+    const int border = highlighted ? 4 : 2;
+    for (int i = 0; i < border; i++)
+    {
+        SDL_Rect outline = {rect.x + i, rect.y + i, rect.w - 2 * i, rect.h - 2 * i};
+        SDL_RenderDrawRect(renderer, &outline);
+    }
+
+    if (label_texture != nullptr)
+    {
+        label_texture->renderCentered(position_x + width / 2, position_y + height / 2);
+    }
 }
 
 int Button::getX ()

@@ -4,6 +4,9 @@
 #include "button.hpp"
 #include "inputmanager.hpp"
 #include "state.hpp"
+#include "texture.hpp"
+
+#include <vector>
 
 class PausedState: public State
 {
@@ -19,9 +22,8 @@ public:
 
 private:
     std::vector<Button*> mButtons;
-    Texture *paused_frame;
-
-    int index;                  // Shows the current button selected
+    Texture *title_text;
+    int index;
 };
 
 #endif // PAUSEDSTATE_HPP

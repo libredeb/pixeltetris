@@ -1,6 +1,6 @@
 # .gitignore
 # ignore these files/directories when using git
-
+**/*.DS_Store
 build
 build2
 devlog.txt

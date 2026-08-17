@@ -39,6 +39,8 @@ private:
    
     Texture *countdown_texture;
     Texture *gameover_text;
+    Texture *hold_label;
+    Texture *next_label;
     Texture *tetrominoSprites;
     SDL_Rect tetrominoSpriteClips[7];
     Texture *playfieldFrame;

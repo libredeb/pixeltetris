@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Pixeltetris
+Name[es]=Pixeltetris
+GenericName=Tetris
+GenericName[es]=Tetris
+Comment=Pixel-art Tetris for handheld and desktop
+Comment[es]=Tetris de estilo pixel art para portátil y escritorio
+Exec=Pixeltetris
+Icon=pixeltetris
+Terminal=false
+StartupNotify=false
+StartupWMClass=Pixeltetris
+Categories=Game;BlocksGame;
+Keywords=tetris;puzzle;game;blocks;SDL;

@@ -5,15 +5,13 @@
 
 #include "texture.hpp"
 
-
-// Represents a standard button with a texture and a certain position that can be selected. If selected, the callback function can be called
+// Full-width (or sized) text row, sized for a 4" 720x720 handheld panel.
 class Button
 {
 public:
-    Button (std::string path, void (*callback) (), int posX = 0, int posY = 0);
+    Button (const std::string &label, void (*callback) (), int posX, int posY, int w, int h);
     ~Button ();
-    bool loadTexture (std::string path);
-    void draw ();
+    void draw (bool highlighted = false);
     void (*callbackFunction) ();
 
     int getX ();
@@ -26,7 +24,7 @@ private:
     int position_y;
     int width;
     int height;
-    Texture *texture;
+    Texture *label_texture;
 };
 
 #endif // BUTTON_HPP

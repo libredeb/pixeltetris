@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include "audio.hpp"
 #include "button.hpp"
 #include "config.hpp"
 #include "gamestate.hpp"
@@ -48,7 +49,7 @@ bool Game::initialize()
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 #endif
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS) < 0)
     {
         std::cerr << "Could not initialize SDL! SDL_Error: " << SDL_GetError() << '\n';
         success = false;
@@ -108,6 +109,9 @@ bool Game::initialize()
 
     mManager = new InputManager;
 
+    audio::initialize();
+    audio::playTheme();
+
     mMainMenuState = new MenuState(mManager);
     mMainMenuState->initialize();
     pushState(mMainMenuState);
@@ -132,6 +136,8 @@ void Game::exit ()
 
     delete mRenderer;
     mRenderer = nullptr;
+
+    audio::shutdown();
 
     SDL_DestroyWindow(mWindow);
     mWindow = nullptr;

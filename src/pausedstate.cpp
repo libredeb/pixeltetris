@@ -1,5 +1,6 @@
 #include "pausedstate.hpp"
 
+#include "audio.hpp"
 #include "config.hpp"
 #include "game.hpp"
 
@@ -76,6 +77,7 @@ void PausedState::update ()
                 if (index > 0)
                 {
                     --index;
+                    audio::playMenuMove();
                 }
                 break;
             }
@@ -86,6 +88,7 @@ void PausedState::update ()
                 if (index < static_cast<int>(mButtons.size()) - 1)
                 {
                     ++index;
+                    audio::playMenuMove();
                 }
                 break;
             }

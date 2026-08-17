@@ -11,6 +11,7 @@ include(GNUInstallDirs)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_image REQUIRED)
+find_package(SDL2_mixer REQUIRED)
 
 file(GLOB_RECURSE TARGET_SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
@@ -21,12 +22,12 @@ else()
 	add_executable(Pixeltetris ${TARGET_SOURCES})
 endif()
 
-target_include_directories(Pixeltetris PRIVATE ${SDL2_PARENT_DIR} ${SDL2_INCLUDE_DIR} ${SDL2_TTF_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
+target_include_directories(Pixeltetris PRIVATE ${SDL2_PARENT_DIR} ${SDL2_INCLUDE_DIR} ${SDL2_TTF_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS} ${SDL2_MIXER_INCLUDE_DIRS})
 if (SDL2_INCLUDE_DIR)
 	get_filename_component(SDL2_INCLUDE_PARENT "${SDL2_INCLUDE_DIR}" DIRECTORY)
 	target_include_directories(Pixeltetris PRIVATE ${SDL2_INCLUDE_PARENT})
 endif()
-target_link_libraries(Pixeltetris ${SDL2_LIBRARY} ${SDL2_TTF_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
+target_link_libraries(Pixeltetris ${SDL2_LIBRARY} ${SDL2_TTF_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${SDL2_MIXER_LIBRARIES})
 target_compile_definitions(Pixeltetris PRIVATE
 	PIXELTETRIS_DATADIR="${CMAKE_INSTALL_FULL_DATADIR}/pixeltetris"
 )

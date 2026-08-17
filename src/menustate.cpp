@@ -1,5 +1,6 @@
 #include "menustate.hpp"
 
+#include "audio.hpp"
 #include "config.hpp"
 #include "inputmanager.hpp"
 #include "renderer.hpp"
@@ -88,6 +89,7 @@ void MenuState::update ()
                 if (index > 0)
                 {
                     --index;
+                    audio::playMenuMove();
                 }
                 break;
             }
@@ -97,6 +99,7 @@ void MenuState::update ()
                 if (index < static_cast<int>(mButtons.size()) - 1)
                 {
                     ++index;
+                    audio::playMenuMove();
                 }
                 break;
             }

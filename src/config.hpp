@@ -41,6 +41,8 @@ namespace config
 
     // Gamepad / DAS (Delayed Auto Shift)
     const int axis_deadzone = 8000;
+    const int axis_press_deadzone = 16000;
+    const int axis_release_deadzone = 8000;
     const int trigger_threshold = 16000;
     const int das_delay_ms = 180;
     const int das_repeat_ms = 50;

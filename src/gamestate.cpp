@@ -9,6 +9,7 @@
 #include "config.hpp"
 #include "inputmanager.hpp"
 #include "game.hpp"
+#include "audio.hpp"
 #include "paths.hpp"
 #include "renderer.hpp"
 #include "texture.hpp"
@@ -344,6 +345,10 @@ void GameState::handleEvent (Action action)
             if (!board->isPositionLegal(currentPiece))
             {
                 currentPiece.rotation = (currentPiece.rotation + 3) % 4;
+            }
+            else
+            {
+                audio::playRotate();
             }
             break;
         }

@@ -1,5 +1,6 @@
 #include "optionsstate.hpp"
 
+#include "audio.hpp"
 #include "config.hpp"
 #include "game.hpp"
 
@@ -98,6 +99,7 @@ void OptionsState::update ()
                 if (index > 0)
                 {
                     --index;
+                    audio::playMenuMove();
                 }
                 break;
             }
@@ -106,6 +108,7 @@ void OptionsState::update ()
                 if (index < 1)
                 {
                     ++index;
+                    audio::playMenuMove();
                 }
                 break;
             }

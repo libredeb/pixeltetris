@@ -2,7 +2,7 @@
 # Curated for Vinyl: PS3, PS4, PS5, Xbox 360/One/Series, Nintendo Switch Pro, 8BitDo Zero, THEGamepad, Arduino Leonardo
 
 # Arduino Leonardo (GamerCard custom gamepad)
-03000000412300003680000001010000,Arduino Leonardo,a:b0,b:b1,x:b3,y:b4,back:b10,start:b11,leftshoulder:b5,rightshoulder:b6,dpdown:+a1,dpleft:-a0,dpright:+a0,dpup:-a1,leftx:a0,lefty:a1,platform:Linux,
+03000000412300003680000001010000,Arduino Leonardo,a:b0,b:b1,x:b3,y:b4,back:b10,start:b11,leftshoulder:b5,rightshoulder:b6,dpdown:+a1,dpleft:-a0,dpright:+a0,dpup:-a1,platform:Linux,
 
 # THEGamepad (Retro Games LTD)
 03000000591c00002600000010010000,THEGamepad,a:b2,b:b1,back:b6,leftshoulder:b4,leftx:a0,lefty:a1,rightshoulder:b5,start:b7,x:b3,y:b0,platform:Linux,

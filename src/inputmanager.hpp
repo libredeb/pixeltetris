@@ -34,16 +34,23 @@ private:
     Action action;
     RepeatPolicy repeat_policy;
 
+    enum DirSource : Uint8
+    {
+        DIR_SRC_KEYBOARD = 1 << 0,
+        DIR_SRC_DPAD     = 1 << 1,
+        DIR_SRC_STICK    = 1 << 2
+    };
+
     SDL_GameController *controllers[max_controllers];
 
-    bool held_up;
-    bool held_down;
-    bool held_left;
-    bool held_right;
     bool trigger_left_down;
     bool trigger_right_down;
     int axis_x_dir;
     int axis_y_dir;
+    Uint8 held_mask_up;
+    Uint8 held_mask_down;
+    Uint8 held_mask_left;
+    Uint8 held_mask_right;
     Uint32 direction_stamp;
     bool first_repeat_done;
 
@@ -55,10 +62,12 @@ private:
 
     Action translateEvent (const SDL_Event &event);
     Action actionFromControllerButton (SDL_GameControllerButton button) const;
-    void setHeldDirection (Action direction, bool down);
-    Action edgeDirection (Action direction, bool down);
+    Action setDirectionSource (Action direction, Uint8 source, bool down);
+    Action applyStickAxis (int *axis_dir, Action negative, Action positive, Sint16 value);
     Action repeatAction ();
     bool isRepeatable (Action direction) const;
+    bool isHeld (Action direction) const;
+    Uint8 *maskFor (Action direction);
 };
 
 #endif // INPUTMANAGER_HPP

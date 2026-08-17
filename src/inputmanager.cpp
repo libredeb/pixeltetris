@@ -8,7 +8,7 @@
 // Built-in fallbacks for devices that SDL does not ship (Gamer Card / THEGamepad / 8BitDo).
 // The full Linux database is still loaded from gamecontrollerdb.txt when present.
 static const char *kFallbackMappings[] = {
-    "03000000412300003680000001010000,Arduino Leonardo,a:b0,b:b1,x:b3,y:b4,back:b10,start:b11,leftshoulder:b5,rightshoulder:b6,dpdown:+a1,dpleft:-a0,dpright:+a0,dpup:-a1,leftx:a0,lefty:a1,platform:Linux,",
+    "03000000412300003680000001010000,Arduino Leonardo,a:b0,b:b1,x:b3,y:b4,back:b10,start:b11,leftshoulder:b5,rightshoulder:b6,dpdown:+a1,dpleft:-a0,dpright:+a0,dpup:-a1,platform:Linux,",
     "03000000591c00002600000010010000,THEGamepad,a:b2,b:b1,back:b6,leftshoulder:b4,leftx:a0,lefty:a1,rightshoulder:b5,start:b7,x:b3,y:b0,platform:Linux,",
     "05000000a00500003232000001000000,8BitDo Zero,a:b0,b:b1,back:b10,dpdown:+a1,dpleft:-a0,dpright:+a0,dpup:-a1,leftshoulder:b6,rightshoulder:b7,start:b11,x:b3,y:b4,platform:Linux,",
     "05000000a00500003232000008010000,8BitDo Zero,a:b0,b:b1,back:b10,dpdown:+a1,dpleft:-a0,dpright:+a0,dpup:-a1,leftshoulder:b6,rightshoulder:b7,start:b11,x:b3,y:b4,platform:Linux,",
@@ -22,7 +22,7 @@ InputManager::InputManager ()
     quit_game = false;
     action = Action::stay_idle;
     repeat_policy = RepeatPolicy::menu;
-    held_up = held_down = held_left = held_right = false;
+    held_mask_up = held_mask_down = held_mask_left = held_mask_right = 0;
     trigger_left_down = trigger_right_down = false;
     axis_x_dir = 0;
     axis_y_dir = 0;
@@ -235,44 +235,100 @@ Action InputManager::actionFromControllerButton (SDL_GameControllerButton button
     }
 }
 
-void InputManager::setHeldDirection (Action direction, bool down)
+Uint8 *InputManager::maskFor (Action direction)
 {
-    bool *flag = nullptr;
     switch (direction)
     {
-        case Action::move_up: flag = &held_up; break;
-        case Action::move_down: flag = &held_down; break;
-        case Action::move_left: flag = &held_left; break;
-        case Action::move_right: flag = &held_right; break;
-        default: return;
-    }
-    if (*flag == down)
-    {
-        return;
-    }
-    *flag = down;
-    if (down)
-    {
-        direction_stamp = SDL_GetTicks();
-        first_repeat_done = false;
+        case Action::move_up: return &held_mask_up;
+        case Action::move_down: return &held_mask_down;
+        case Action::move_left: return &held_mask_left;
+        case Action::move_right: return &held_mask_right;
+        default: return nullptr;
     }
 }
 
-Action InputManager::edgeDirection (Action direction, bool down)
+bool InputManager::isHeld (Action direction) const
 {
-    bool already_held = false;
     switch (direction)
     {
-        case Action::move_up: already_held = held_up; break;
-        case Action::move_down: already_held = held_down; break;
-        case Action::move_left: already_held = held_left; break;
-        case Action::move_right: already_held = held_right; break;
-        default: return down ? direction : Action::stay_idle;
+        case Action::move_up: return held_mask_up != 0;
+        case Action::move_down: return held_mask_down != 0;
+        case Action::move_left: return held_mask_left != 0;
+        case Action::move_right: return held_mask_right != 0;
+        default: return false;
     }
-    setHeldDirection(direction, down);
-    if (down && !already_held)
+}
+
+Action InputManager::setDirectionSource (Action direction, Uint8 source, bool down)
+{
+    Uint8 *mask = maskFor(direction);
+    if (mask == nullptr)
     {
+        return Action::stay_idle;
+    }
+    const Uint8 before = *mask;
+    if (down)
+    {
+        *mask = static_cast<Uint8>(before | source);
+    }
+    else
+    {
+        *mask = static_cast<Uint8>(before & static_cast<Uint8>(~source));
+    }
+    if (before == 0 && *mask != 0)
+    {
+        direction_stamp = SDL_GetTicks();
+        first_repeat_done = false;
         return direction;
+    }
+    return Action::stay_idle;
+}
+
+Action InputManager::applyStickAxis (int *axis_dir, Action negative, Action positive, Sint16 value)
+{
+    int dir = *axis_dir;
+    if (dir == 0)
+    {
+        if (value <= -config::axis_press_deadzone) { dir = -1; }
+        else if (value >= config::axis_press_deadzone) { dir = 1; }
+    }
+    else
+    {
+        if (value > -config::axis_release_deadzone && value < config::axis_release_deadzone)
+        {
+            dir = 0;
+        }
+        else if (dir < 0 && value >= config::axis_press_deadzone)
+        {
+            dir = 1;
+        }
+        else if (dir > 0 && value <= -config::axis_press_deadzone)
+        {
+            dir = -1;
+        }
+    }
+
+    if (dir == *axis_dir)
+    {
+        return Action::stay_idle;
+    }
+
+    if (*axis_dir < 0)
+    {
+        setDirectionSource(negative, DIR_SRC_STICK, false);
+    }
+    else if (*axis_dir > 0)
+    {
+        setDirectionSource(positive, DIR_SRC_STICK, false);
+    }
+    *axis_dir = dir;
+    if (dir < 0)
+    {
+        return setDirectionSource(negative, DIR_SRC_STICK, true);
+    }
+    if (dir > 0)
+    {
+        return setDirectionSource(positive, DIR_SRC_STICK, true);
     }
     return Action::stay_idle;
 }
@@ -284,7 +340,6 @@ bool InputManager::isRepeatable (Action direction) const
         return direction == Action::move_up || direction == Action::move_down
             || direction == Action::move_left || direction == Action::move_right;
     }
-    // In gameplay, DAS applies to horizontal movement and soft drop. Up is rotate.
     return direction == Action::move_down || direction == Action::move_left
         || direction == Action::move_right;
 }
@@ -292,10 +347,10 @@ bool InputManager::isRepeatable (Action direction) const
 Action InputManager::repeatAction ()
 {
     Action direction = Action::stay_idle;
-    if (held_down) { direction = Action::move_down; }
-    else if (held_left) { direction = Action::move_left; }
-    else if (held_right) { direction = Action::move_right; }
-    else if (held_up) { direction = Action::move_up; }
+    if (isHeld(Action::move_down)) { direction = Action::move_down; }
+    else if (isHeld(Action::move_left)) { direction = Action::move_left; }
+    else if (isHeld(Action::move_right)) { direction = Action::move_right; }
+    else if (isHeld(Action::move_up)) { direction = Action::move_up; }
 
     if (direction == Action::stay_idle || !isRepeatable(direction))
     {
@@ -346,10 +401,10 @@ Action InputManager::translateEvent (const SDL_Event &event)
             }
             switch (event.key.keysym.sym)
             {
-                case SDLK_UP: return edgeDirection(Action::move_up, true);
-                case SDLK_DOWN: return edgeDirection(Action::move_down, true);
-                case SDLK_LEFT: return edgeDirection(Action::move_left, true);
-                case SDLK_RIGHT: return edgeDirection(Action::move_right, true);
+                case SDLK_UP: return setDirectionSource(Action::move_up, DIR_SRC_KEYBOARD, true);
+                case SDLK_DOWN: return setDirectionSource(Action::move_down, DIR_SRC_KEYBOARD, true);
+                case SDLK_LEFT: return setDirectionSource(Action::move_left, DIR_SRC_KEYBOARD, true);
+                case SDLK_RIGHT: return setDirectionSource(Action::move_right, DIR_SRC_KEYBOARD, true);
                 case SDLK_RETURN: return Action::select;
                 case SDLK_SPACE: return Action::drop;
                 case SDLK_q:
@@ -367,10 +422,10 @@ Action InputManager::translateEvent (const SDL_Event &event)
         {
             switch (event.key.keysym.sym)
             {
-                case SDLK_UP: return edgeDirection(Action::move_up, false);
-                case SDLK_DOWN: return edgeDirection(Action::move_down, false);
-                case SDLK_LEFT: return edgeDirection(Action::move_left, false);
-                case SDLK_RIGHT: return edgeDirection(Action::move_right, false);
+                case SDLK_UP: return setDirectionSource(Action::move_up, DIR_SRC_KEYBOARD, false);
+                case SDLK_DOWN: return setDirectionSource(Action::move_down, DIR_SRC_KEYBOARD, false);
+                case SDLK_LEFT: return setDirectionSource(Action::move_left, DIR_SRC_KEYBOARD, false);
+                case SDLK_RIGHT: return setDirectionSource(Action::move_right, DIR_SRC_KEYBOARD, false);
                 default: return Action::stay_idle;
             }
         }
@@ -382,7 +437,7 @@ Action InputManager::translateEvent (const SDL_Event &event)
             if (mapped == Action::move_up || mapped == Action::move_down
                 || mapped == Action::move_left || mapped == Action::move_right)
             {
-                return edgeDirection(mapped, true);
+                return setDirectionSource(mapped, DIR_SRC_DPAD, true);
             }
             return mapped;
         }
@@ -394,7 +449,7 @@ Action InputManager::translateEvent (const SDL_Event &event)
             if (mapped == Action::move_up || mapped == Action::move_down
                 || mapped == Action::move_left || mapped == Action::move_right)
             {
-                return edgeDirection(mapped, false);
+                return setDirectionSource(mapped, DIR_SRC_DPAD, false);
             }
             return Action::stay_idle;
         }
@@ -402,47 +457,13 @@ Action InputManager::translateEvent (const SDL_Event &event)
         case SDL_CONTROLLERAXISMOTION:
         {
             const Sint16 value = event.caxis.value;
-            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX
-                || event.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTX)
+            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX)
             {
-                int dir = 0;
-                if (value < -config::axis_deadzone) { dir = -1; }
-                else if (value > config::axis_deadzone) { dir = 1; }
-                if (dir == axis_x_dir)
-                {
-                    return Action::stay_idle;
-                }
-                Action previous = (axis_x_dir < 0) ? Action::move_left
-                    : (axis_x_dir > 0) ? Action::move_right : Action::stay_idle;
-                if (previous != Action::stay_idle)
-                {
-                    edgeDirection(previous, false);
-                }
-                axis_x_dir = dir;
-                if (dir < 0) { return edgeDirection(Action::move_left, true); }
-                if (dir > 0) { return edgeDirection(Action::move_right, true); }
-                return Action::stay_idle;
+                return applyStickAxis(&axis_x_dir, Action::move_left, Action::move_right, value);
             }
-            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY
-                || event.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTY)
+            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
             {
-                int dir = 0;
-                if (value < -config::axis_deadzone) { dir = -1; }
-                else if (value > config::axis_deadzone) { dir = 1; }
-                if (dir == axis_y_dir)
-                {
-                    return Action::stay_idle;
-                }
-                Action previous = (axis_y_dir < 0) ? Action::move_up
-                    : (axis_y_dir > 0) ? Action::move_down : Action::stay_idle;
-                if (previous != Action::stay_idle)
-                {
-                    edgeDirection(previous, false);
-                }
-                axis_y_dir = dir;
-                if (dir < 0) { return edgeDirection(Action::move_up, true); }
-                if (dir > 0) { return edgeDirection(Action::move_down, true); }
-                return Action::stay_idle;
+                return applyStickAxis(&axis_y_dir, Action::move_up, Action::move_down, value);
             }
             if (event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
             {
